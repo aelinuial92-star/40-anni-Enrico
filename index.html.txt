@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz Immagini Oscurate</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; background: #eef2f5; padding: 20px; margin: 0; }
+    .card { max-width: 650px; margin: 20px auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    h2 { margin-top: 0; color: #333; }
+    .counter { font-weight: bold; color: #666; margin-bottom: 15px; }
+    img { max-width: 100%; height: 320px; object-fit: contain; border-radius: 8px; border: 1px solid #ddd; background: #fafafa; }
+    .options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
+    button.opt-btn { padding: 14px; font-size: 18px; font-weight: bold; border: none; background: #007bff; color: white; border-radius: 8px; cursor: pointer; transition: background 0.2s; }
+    button.opt-btn:hover:not(:disabled) { background: #0056b3; }
+    button.opt-btn:disabled { cursor: not-allowed; opacity: 0.6; }
+    .feedback { margin-top: 15px; font-weight: bold; font-size: 18px; min-height: 27px; }
+    .correct-text { color: #28a745; }
+    .wrong-text { color: #dc3545; }
+    .next-btn { margin-top: 20px; padding: 12px 24px; font-size: 16px; font-weight: bold; background: #28a745; color: white; border: none; border-radius: 8px; cursor: pointer; display: none; }
+    .next-btn:hover { background: #218838; }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <div class="counter" id="progress">Domanda 1 di 19</div>
+  <h2 id="question">DOMANDA</h2>
+  <img id="quiz-image" src="" alt="Quiz Image">
+  <div class="feedback" id="feedback-msg"></div>
+  <div class="options" id="options-container"></div>
+  <button id="next-btn" class="next-btn" onclick="nextQuestion()">Prossima Domanda ➔</button>
+</div>
+
+<script>
+  // NOTA PER LA RISPOSTA CORRETTA (correct):
+  // 0 = A
+  // 1 = B
+  // 2 = C
+  // 3 = D
+
+  const quizData = [
+    { maskedImg: "1.jpg", fullImg: "1a.jpg", question: "Cosa ci sarà al buio?", options: ["Damna", "Lore", "Pino Scotto", "Il Mauri"], correct: 1 },
+    { maskedImg: "2.jpg", fullImg: "2a.jpg", question: "Cosa ci sarà al buio?", options: ["A", "B", "C", "D"], correct: 0 },
+    { maskedImg: "3.jpg", fullImg: "3a.jpg", question: "Cosa ci sarà al buio?", options: ["A", "B", "C", "D"], correct: 0 },
+    { maskedImg: "4.jpg", fullImg: "4a.jpg", question: "Cosa ci sarà al buio?", options: ["A", "B", "C", "D"], correct: 0 },
+    { maskedImg: "5.jpg", fullImg: "5a.jpg", question: "Cosa ci sarà al buio?", options: ["A", "B", "C", "D"], correct: 0 },
+    { maskedImg: "6.jpg", fullImg: "6a.jpg", question: "Cosa ci sarà al buio?", options: ["A", "B", "C", "D"], correct: 0 },
+    { maskedImg: "7.jpg", fullImg: "7a.jpg", question: "Cosa ci sarà al buio?", options: ["A", "B", "C", "D"], correct: 0 },
+    { maskedImg: "8.jpg", fullImg: "8a.jpg", question: "Cosa ci sarà al buio?", options: ["A", "B", "C", "D"], correct: 0 },
+    { maskedImg: "9.jpg", fullImg: "9a.jpg", question: "Cosa ci sarà al buio?", options: ["A", "B", "C", "D"], correct: 0 },
+    { maskedImg: "10.jpg", fullImg: "10a.jpg", question: "Cosa ci sarà al buio?", options: ["A", "B", "C", "D"], correct: 0 },
+    { maskedImg: "11.jpg", fullImg: "11a.jpg", question: "Cosa ci sarà al buio?", options: ["A", "B", "C", "D"], correct: 0 },
+    { maskedImg: "12.jpg", fullImg: "12a.jpg", question: "Cosa ci sarà al buio?", options: ["A", "B", "C", "D"], correct: 0 },
+    { maskedImg: "13.jpg", fullImg: "13a.jpg", question: "Cosa ci sarà al buio?", options: ["A", "B", "C", "D"], correct: 0 },
+    { maskedImg: "14.jpg", fullImg: "14a.jpg", question: "Cosa ci sarà al buio?", options: ["A", "B", "C", "D"], correct: 0 },
+    { maskedImg: "15.jpg", fullImg: "15a.jpg", question: "Cosa ci sarà al buio?", options: ["A", "B", "C", "D"], correct: 0 },
+    { maskedImg: "16.jpg", fullImg: "16a.jpg", question: "Cosa ci sarà al buio?", options: ["A", "B", "C", "D"], correct: 0 },
+    { maskedImg: "17.jpg", fullImg: "17a.jpg", question: "Cosa ci sarà al buio?", options: ["A", "B", "C", "D"], correct: 0 },
+    { maskedImg: "18.jpg", fullImg: "18a.jpg", question: "Cosa ci sarà al buio?", options: ["A", "B", "C", "D"], correct: 0 },
+    { maskedImg: "19.jpg", fullImg: "19a.jpg", question: "Cosa ci sarà al buio?", options: ["A", "B", "C", "D"], correct: 0 }
+  ];
+
+  let currentIdx = 0;
+
+  function loadQuestion() {
+    const q = quizData[currentIdx];
+    document.getElementById("progress").innerText = `Domanda ${currentIdx + 1} di ${quizData.length}`;
+    document.getElementById("question").innerText = q.question;
+    document.getElementById("quiz-image").src = q.maskedImg;
+    document.getElementById("feedback-msg").innerText = "";
+    document.getElementById("feedback-msg").className = "feedback";
+    document.getElementById("next-btn").style.display = "none";
+
+    const container = document.getElementById("options-container");
+    container.innerHTML = "";
+
+    q.options.forEach((opt, idx) => {
+      const btn = document.createElement("button");
+      btn.className = "opt-btn";
+      btn.innerText = opt;
+      btn.onclick = () => checkAnswer(idx, btn);
+      container.appendChild(btn);
+    });
+  }
+
+  function checkAnswer(selectedIdx, clickedBtn) {
+    const q = quizData[currentIdx];
+    const feedback = document.getElementById("feedback-msg");
+
+    if (selectedIdx === q.correct) {
+      // Risposta CORRETTA
+      document.getElementById("quiz-image").src = q.fullImg; // Svela l'immagine
+      clickedBtn.style.background = "#28a745";
+      feedback.innerText = "Esatto! 🎉";
+      feedback.className = "feedback correct-text";
+
+      // Disabilita tutti i pulsanti delle opzioni
+      const buttons = document.querySelectorAll(".options button");
+      buttons.forEach(btn => btn.disabled = true);
+
+      // Mostra pulsante per la prossima domanda
+      document.getElementById("next-btn").style.display = "inline-block";
+    } else {
+      // Risposta SBAGLIATA
+      clickedBtn.style.background = "#dc3545";
+      clickedBtn.disabled = true; // Disabilita solo il pulsante sbagliato per far riprovare
+      feedback.innerText = "Sbagliato! Riprova con un'altra risposta. ❌";
+      feedback.className = "feedback wrong-text";
+    }
+  }
+
+  function nextQuestion() {
+    currentIdx++;
+    if (currentIdx < quizData.length) {
+      loadQuestion();
+    } else {
+      document.querySelector(".card").innerHTML = "<h2>🎉 Quiz Completato! Complimenti! 🎉</h2>";
+    }
+  }
+
+  // Avvio prima domanda
+  loadQuestion();
+</script>
+</body>
+</html>
